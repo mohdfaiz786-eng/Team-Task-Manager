@@ -47,6 +47,10 @@ app.put('/api/tasks/:id/status', (req, res) => {
   res.json({ success: true });
 });
 
+app.get("/", (req, res) => {
+  res.send("Team Task Manager API Running 🚀");
+});
+
 app.post('/api/projects/add-member', (req, res) => {
   res.json({ success: true });
 });
