@@ -1,35 +1,57 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import projectRoutes from './routes/projectRoutes.js';
-import taskRoutes from './routes/taskRoutes.js';
+// import connectDB from './config/db.js';  // COMMENT KARDO
 
 dotenv.config();
-connectDB();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// connectDB();  // COMMENT KARDO
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ IMPORTANT: Serve frontend files
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/tasks', taskRoutes);
-
-// ✅ Serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+// Fake routes for testing
+app.post('/api/auth/login', (req, res) => {
+  res.json({ success: true, token: 'fake-token', user: { name: 'Test User', email: req.body.email, role: 'admin' } });
 });
+
+app.post('/api/auth/register', (req, res) => {
+  res.json({ success: true, message: 'User created' });
+});
+
+app.get('/api/projects', (req, res) => {
+  res.json({ success: true, data: [{ _id: '1', name: 'Demo Project', description: 'Test', createdBy: { name: 'Admin' }, members: [] }] });
+});
+
+app.post('/api/projects', (req, res) => {
+  res.json({ success: true, data: req.body });
+});
+
+app.get('/api/tasks', (req, res) => {
+  res.json({ success: true, data: [] });
+});
+
+app.post('/api/tasks', (req, res) => {
+  res.json({ success: true, data: req.body });
+});
+
+app.get('/api/tasks/dashboard', (req, res) => {
+  res.json({ success: true, data: { totalProjects: 1, totalTasks: 0, todoTasks: 0, progressTasks: 0, doneTasks: 0, overdueTasks: 0 } });
+});
+
+app.delete('/api/projects/:id', (req, res) => {
+  res.json({ success: true });
+});
+
+app.put('/api/tasks/:id/status', (req, res) => {
+  res.json({ success: true });
+});
+
+app.post('/api/projects/add-member', (req, res) => {
+  res.json({ success: true });
+});
+
+app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
