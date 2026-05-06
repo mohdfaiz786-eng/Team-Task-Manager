@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Task Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h2 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .error { background: #fee2e2; color: #dc2626; }
+        .success { background: #d1fae5; color: #059669; }
+        .dashboard {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .navbar {
+            background: white;
+            border-radius: 20px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logout-btn {
+            background: #ef4444;
+            width: auto;
+            padding: 8px 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .form-row input, .form-row select {
+            flex: 1;
+            min-width: 150px;
+            margin: 0;
+        }
+        .form-row button {
+            flex: 0.3;
+            min-width: 100px;
+            margin: 0;
+        }
+        .project-item, .task-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .card { padding: 25px; margin: 10px; }
+            .form-row { flex-direction: column; }
+            .form-row button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login/Signup Container -->
+    <div id="authContainer">
+        <div class="card">
+            <h2 id="formTitle">🔐 Signup</h2>
+            <input type="text" id="name" placeholder="Full Name">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <select id="role">
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+            </select>
+            <button onclick="submitAuth()" id="submitBtn">Signup</button>
+            <div class="link">
+                <a href="#" onclick="toggleForm()" id="toggleLink">Already have an account? Login</a>
+            </div>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="navbar">
+            <h2>📊 Team Task Manager</h2>
+            <div>
+                <span id="userName" style="margin-right: 15px;"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="section">
+            <h3>📁 Create Project</h3>
+            <div class="form-row">
+                <input type="text" id="projectName" placeholder="Project Name">
+                <input type="text" id="projectDesc" placeholder="Description">
+                <button onclick="createProject()">Create</button>
+            </div>
+        </div>
+
+        <h3>📋 Projects</h3>
+        <div id="projectsList"></div>
+
+        <div class="section">
+            <h3>✅ Create Task</h3>
+            <div class="form-row">
+                <input type="text" id="taskTitle" placeholder="Task Title">
+                <input type="text" id="taskDesc" placeholder="Description">
+                <select id="taskProject"></select>
+                <select id="taskPriority">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+                <input type="date" id="taskDueDate">
+                <button onclick="createTask()">Create</button>
+            </div>
+        </div>
+
+        <h3>📝 My Tasks</h3>
+        <div id="tasksList"></div>
+    </div>
+
+    <script>
+        const API_URL = 'team-task-manager-production-158f.up.railway.app/api';
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+
+        if (token) {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadAllData();
+        }
+
+        async function fetchAPI(endpoint, options = {}) {
+            const res = await fetch(API_URL + endpoint, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers
+                }
+            });
+            return res.json();
+        }
+
+        let isLogin = false;
+        function toggleForm() {
+            isLogin = !isLogin;
+            if (isLogin) {
+                document.getElementById('formTitle').innerText = '🔐 Login';
+                document.getElementById('submitBtn').innerText = 'Login';
+                document.getElementById('name').style.display = 'none';
+                document.getElementById('role').style.display = 'none';
+                document.getElementById('toggleLink').innerHTML = "Don't have an account? Signup";
+            } else {
+                document.getElementById('formTitle').innerText = '🔐 Signup';
+                document.getElementById('submitBtn').innerText = 'Signup';
+                document.getElementById('name').style.display = 'block';
+                document.getElementById('role').style.display = 'block';
+                document.getElementById('toggleLink').innerHTML = "Already have an account? Login";
+            }
+        }
+
+        async function submitAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+
+            if (!email || !password) {
+                messageDiv.innerHTML = '<div class="message error">Please fill all fields</div>';
+                return;
+            }
+
+            try {
+                if (isLogin) {
+                    // LOGIN
+                    const res = await fetch(`${API_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        token = data.token;
+                        currentUser = data.user;
+                        localStorage.setItem('token', token);
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        document.getElementById('authContainer').style.display = 'none';
+                        document.getElementById('dashboard').style.display = 'block';
+                        document.getElementById('userName').innerHTML = `👋 ${currentUser.name}`;
+                        loadAllData();
+                    } else {
+                        messageDiv.innerHTML = `<div class="message error">${data.message}</div>`;
+                    }
+                } else {
+                    // SIGNUP
+                    const name = document.getElementById('name').value;
+                    const role = document.getElementById('role').value;
+                    
+                    if (!name) {
+                        messageDiv.innerHTML = '<div class="message error">Please enter name</div>';
+                        return;
+                    }
+                    
+                    const res = await fetch(`${API_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password, role })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        messageDiv.innerHTML = '<div class="message success">✅ Signup successful! Please login.</div>';
+                        setTimeout(() => toggleForm(), 1500);
+                        document.getElementById('email').value = '';
+                        document.getElementById('password').value = '';
+                    } else {
+                        messageDiv.innerHTML = `<div class="message error">${data.message}</div>`;
+                    }
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="message error">❌ Server error. Make sure backend is running on port 5000</div>';
+            }
+        }
+
+        async function loadAllData() {
+            await loadStats();
+            await loadProjects();
+            await loadTasks();
+            await loadProjectSelect();
+        }
+
+        async function loadStats() {
+            const data = await fetchAPI('/tasks/dashboard');
+            if (data.success) {
+                const s = data.data;
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card"><h3>Projects</h3><div class="stat-number">${s.totalProjects || 0}</div></div>
+                    <div class="stat-card"><h3>Total Tasks</h3><div class="stat-number">${s.totalTasks || 0}</div></div>
+                    <div class="stat-card"><h3>To Do</h3><div class="stat-number">${s.todoTasks || 0}</div></div>
+                    <div class="stat-card"><h3>In Progress</h3><div class="stat-number">${s.progressTasks || 0}</div></div>
+                    <div class="stat-card"><h3>Done</h3><div class="stat-number">${s.doneTasks || 0}</div></div>
+                    <div class="stat-card"><h3>Overdue</h3><div class="stat-number">${s.overdueTasks || 0}</div></div>
+                `;
+            }
+        }
+
+        async function loadProjects() {
+            const data = await fetchAPI('/projects');
+            if (data.success && data.data) {
+                const projects = data.data;
+                const container = document.getElementById('projectsList');
+                if (projects.length === 0) {
+                    container.innerHTML = '<div class="project-item">No projects yet. Create one!</div>';
+                    return;
+                }
+                container.innerHTML = projects.map(p => `
+                    <div class="project-item">
+                        <strong>📌 ${p.name}</strong>
+                        <p>${p.description}</p>
+                        <small>Status: ${p.status} | Members: ${p.members?.length || 1}</small>
+                        <button onclick="deleteProject('${p._id}')" style="width:auto; background:#ef4444; padding:5px 10px; margin-top:10px;">Delete</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function loadTasks() {
+            const data = await fetchAPI('/tasks');
+            if (data.success && data.data) {
+                const tasks = data.data;
+                const container = document.getElementById('tasksList');
+                if (tasks.length === 0) {
+                    container.innerHTML = '<div class="task-item">No tasks assigned yet.</div>';
+                    return;
+                }
+                container.innerHTML = tasks.map(t => `
+                    <div class="task-item">
+                        <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                            <strong>✓ ${t.title}</strong>
+                            <select onchange="updateStatus('${t._id}', this.value)">
+                                <option value="todo" ${t.status === 'todo' ? 'selected' : ''}>To Do</option>
+                                <option value="progress" ${t.status === 'progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="done" ${t.status === 'done' ? 'selected' : ''}>Done</option>
+                            </select>
+                        </div>
+                        <p>${t.description}</p>
+                        <small>Due: ${new Date(t.dueDate).toLocaleDateString()} | Priority: ${t.priority}</small>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function loadProjectSelect() {
+            const data = await fetchAPI('/projects');
+            if (data.success && data.data) {
+                const select = document.getElementById('taskProject');
+                select.innerHTML = '<option value="">Select Project</option>' + 
+                    data.data.map(p => `<option value="${p._id}">${p.name}</option>`).join('');
+            }
+        }
+
+        async function createProject() {
+            const name = document.getElementById('projectName').value;
+            const description = document.getElementById('projectDesc').value;
+            if (!name || !description) {
+                alert('Please fill all fields');
+                return;
+            }
+            const data = await fetchAPI('/projects', {
+                method: 'POST',
+                body: JSON.stringify({ name, description })
+            });
+            if (data.success) {
+                document.getElementById('projectName').value = '';
+                document.getElementById('projectDesc').value = '';
+                loadAllData();
+                alert('Project created!');
+            }
+        }
+
+        async function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDesc').value;
+            const projectId = document.getElementById('taskProject').value;
+            const priority = document.getElementById('taskPriority').value;
+            const dueDate = document.getElementById('taskDueDate').value;
+            
+            if (!title || !description || !projectId || !dueDate) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            const data = await fetchAPI('/tasks', {
+                method: 'POST',
+                body: JSON.stringify({ title, description, projectId, assignedTo: user.id, dueDate, priority })
+            });
+            if (data.success) {
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskDesc').value = '';
+                document.getElementById('taskDueDate').value = '';
+                loadAllData();
+                alert('Task created!');
+            }
+        }
+
+        async function updateStatus(taskId, status) {
+            await fetchAPI(`/tasks/${taskId}/status`, {
+                method: 'PUT',
+                body: JSON.stringify({ status })
+            });
+            loadAllData();
+        }
+
+        async function deleteProject(projectId) {
+            if (confirm('Delete this project?')) {
+                await fetchAPI(`/projects/${projectId}`, { method: 'DELETE' });
+                loadAllData();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            location.reload();
+        }
+
+        // Check stored user
+        const stored = localStorage.getItem('user');
+        if (stored && token) {
+            currentUser = JSON.parse(stored);
+            document.getElementById('userName').innerHTML = `👋 ${currentUser.name}`;
+        }
+    </script>
+</body>
+</html>
