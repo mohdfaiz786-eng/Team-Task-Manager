@@ -1,17 +1,9 @@
 {
-  "name": "team-task-manager",
+  "name": "backend",
   "version": "1.0.0",
-  "main": "backend/server.js",
-  "scripts": {
-    "start": "node backend/server.js",
-    "build": "npm install"
-  },
-  "engines": {
-    "node": "18.x",
-    "npm": "9.x"
-  },
+  "type": "module",
   "dependencies": {
-    "express": "4.18.2",
-    "cors": "2.8.5"
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   }
 }
