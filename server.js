@@ -1,5 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +17,7 @@ const users = [];
 const projects = [];
 const tasks = [];
 
-// ========== AUTH ==========
+// Auth Routes
 app.post('/api/auth/register', (req, res) => {
   const { name, email, password, role } = req.body;
   
@@ -22,7 +27,7 @@ app.post('/api/auth/register', (req, res) => {
   
   const user = { id: Date.now().toString(), name, email, password, role: role || 'member' };
   users.push(user);
-  res.json({ success: true, message: 'Signup successful! Please login.' });
+  res.json({ success: true, message: 'Signup successful!' });
 });
 
 app.post('/api/auth/login', (req, res) => {
@@ -37,27 +42,24 @@ app.post('/api/auth/login', (req, res) => {
   res.json({ success: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
 });
 
-// ========== MIDDLEWARE ==========
+// Auth Middleware
 const auth = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ success: false, message: 'No token' });
-  
-  const userId = Buffer.from(token, 'base64').toString();
-  req.userId = userId;
+  req.userId = Buffer.from(token, 'base64').toString();
   next();
 };
 
-// ========== PROJECTS ==========
+// Projects
 app.post('/api/projects', auth, (req, res) => {
   const { name, description } = req.body;
-  const project = { _id: Date.now().toString(), name, description, createdBy: req.userId, members: [req.userId], status: 'active' };
+  const project = { _id: Date.now().toString(), name, description, createdBy: req.userId, members: [req.userId] };
   projects.push(project);
   res.json({ success: true, data: project });
 });
 
 app.get('/api/projects', auth, (req, res) => {
-  const userProjects = projects.filter(p => p.members.includes(req.userId));
-  res.json({ success: true, data: userProjects });
+  res.json({ success: true, data: projects.filter(p => p.members.includes(req.userId)) });
 });
 
 app.delete('/api/projects/:id', auth, (req, res) => {
@@ -66,7 +68,7 @@ app.delete('/api/projects/:id', auth, (req, res) => {
   res.json({ success: true });
 });
 
-// ========== TASKS ==========
+// Tasks
 app.post('/api/tasks', auth, (req, res) => {
   const { title, description, projectId, dueDate, priority } = req.body;
   const task = { _id: Date.now().toString(), title, description, projectId, assignedTo: req.userId, dueDate, priority, status: 'todo' };
@@ -75,8 +77,7 @@ app.post('/api/tasks', auth, (req, res) => {
 });
 
 app.get('/api/tasks', auth, (req, res) => {
-  const userTasks = tasks.filter(t => t.assignedTo === req.userId);
-  res.json({ success: true, data: userTasks });
+  res.json({ success: true, data: tasks.filter(t => t.assignedTo === req.userId) });
 });
 
 app.put('/api/tasks/:id/status', auth, (req, res) => {
@@ -99,17 +100,12 @@ app.get('/api/tasks/dashboard', auth, (req, res) => {
   }});
 });
 
-// ========== SERVE FRONTEND ==========
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// Serve Frontend
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
